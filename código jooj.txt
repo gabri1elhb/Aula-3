@@ -1,0 +1,121 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <string.h>
+
+typedef struct {
+    char nome[20];
+    int vida;
+    int ataque;
+    int defesa;
+    int cartas[3]; // Cartas para ataques especiais
+} Jogador;
+
+// Função para realizar um ataque
+int atacar(Jogador *atacante, Jogador *defensor) {
+    int dano = atacante->ataque - defensor->defesa;
+    if (dano < 0) dano = 0;
+    defensor->vida -= dano;
+    return dano;
+}
+
+// Função para usar um kit médico
+void usarKitMedico(Jogador *jogador) {
+    jogador->vida += 20; // Pode ajustar a quantidade de cura
+}
+
+// Função para usar uma carta especial
+int usarCarta(Jogador *atacante, Jogador *defensor) {
+    int cartaSelecionada = rand() % 3; // Escolhe aleatoriamente uma das 3 cartas
+    int dano = 0;
+
+    switch (cartaSelecionada) {
+        case 0:
+            dano = 40;
+            break;
+        case 1:
+            dano = 30;
+            break;
+        case 2:
+            dano = 50;
+            break;
+    }
+
+    defensor->vida -= dano;
+    return dano;
+}
+
+// base
+int main() {
+    srand(time(NULL)); // Inicializar o gerador de números aleatórios
+
+    Jogador jogador1, jogador2;
+
+    printf("Escreva o nome do player1: ");
+    scanf("%s", jogador1.nome);
+    jogador1.vida = 100;
+    jogador1.ataque = 30;
+    jogador1.defesa = 10;
+    memset(jogador1.cartas, 0, sizeof(jogador1.cartas));
+
+    printf("Escreva o nome do player2: ");
+    scanf("%s", jogador2.nome);
+    jogador2.vida = 100;
+    jogador2.ataque = 25;
+    jogador2.defesa = 15;
+    memset(jogador2.cartas, 0, sizeof(jogador2.cartas));
+
+    int vez = 1;
+
+    while (jogador1.vida > 0 && jogador2.vida > 0) {
+        Jogador *jogadorAtual, *outroJogador;
+        if (vez == 1) {
+            jogadorAtual = &jogador1;
+            outroJogador = &jogador2;
+        } else {
+            jogadorAtual = &jogador2;
+            outroJogador = &jogador1;
+        }
+
+        printf("\n%s:\n", jogadorAtual->nome);
+        printf("Vida: %d/100, Ataque: %d, Defesa: %d\n", jogadorAtual->vida, jogadorAtual->ataque, jogadorAtual->defesa);
+        printf("Cartas: ");
+        for (int i = 0; i < 3; i++) {
+            printf("%d. Carta %d (%s)  ", i, i + 1, (jogadorAtual->cartas[i] > 0) ? "Disponível" : "Esgotada");
+        }
+        printf("\n");
+
+        int escolha;
+        printf("Escolha uma ação:\n1. Atacar\n2. Usar Kit Médico\n3. Usar Carta Especial\n");
+        scanf("%d", &escolha);
+
+        if (escolha == 1) {
+            int dano = atacar(jogadorAtual, outroJogador);
+            printf("%s atacou %s e causou %d de dano.\n", jogadorAtual->nome, outroJogador->nome, dano);
+        } else if (escolha == 2) {
+            usarKitMedico(jogadorAtual);
+            printf("%s usou um Kit Médico e agora tem %d de vida.\n", jogadorAtual->nome, jogadorAtual->vida);
+        } else if (escolha == 3) {
+            if (jogadorAtual->cartas[0] > 0 || jogadorAtual->cartas[1] > 0 || jogadorAtual->cartas[2] > 0) {
+                int dano = usarCarta(jogadorAtual, outroJogador);
+                printf("%s usou uma Carta Especial e causou %d de dano a %s.\n", jogadorAtual->nome, dano, outroJogador->nome);
+                jogadorAtual->cartas[escolha - 1]--;
+            } else {
+                printf("%s não tem cartas especiais disponíveis.\n", jogadorAtual->nome);
+            }
+        } else {
+            printf("Opção inválida. Escolha 1 para atacar, 2 para usar Kit Médico ou 3 para usar Carta Especial.\n");
+        }
+
+        vez = (vez == 1) ? 2 : 1;
+    }
+
+    // Determinar o vencedor
+    if (jogador1.vida <= 0) {
+        printf("%s venceu o jogo!\n", jogador2.nome);
+    } else {
+        printf("%s venceu o jogo!\n", jogador1.nome);
+    }
+
+    return 0;
+}
